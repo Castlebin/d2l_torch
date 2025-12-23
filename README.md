@@ -1,5 +1,3 @@
-from dl_d2l.util import enable_matplotlib_chinese
-
 # dl_d2l
 
 This repository contains PyTorch implementations of the Deep Learning book "Dive into Deep Learning" (D2L).   
