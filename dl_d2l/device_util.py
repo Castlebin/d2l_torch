@@ -100,7 +100,11 @@ def test_device_performance(device):
 
     logging.info(f"Device Type: {device}")
     logging.info(f"Time for 100 matrix multiplications: {end - start:.4f} seconds")
-    logging.info(f"Tensors on target device: {x.device == device}")
+
+    if device.type in ["mps"]:
+        logging.info(f"Tensors on target device (MPS): {x.device.type == device.type}")
+    else:
+        logging.info(f"Tensors on target device: {x.device == device}")
 
 
 # ==================== Main Program ====================
