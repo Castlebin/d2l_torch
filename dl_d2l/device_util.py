@@ -55,8 +55,7 @@ def get_available_device():
         if platform.system() == "Linux" and check_amd_gpu():
             if hasattr(torch.version, 'hip') and torch.version.hip is not None:
                 device = torch.device("rocm")
-                gpu_count = torch.cuda.device_count()
-                logging.info("Detected AMD GPU (ROCm)")
+                logging.info(f"Detected AMD GPU (ROCm) ")
                 logging.info(f"ROCm Version: {torch.version.hip}")
                 return device
     except:
@@ -74,7 +73,13 @@ def get_available_device():
             logging.warning("AMD GPU detected but torch-directml is not installed. Falling back to CPU.")
             logging.warning("Install command: pip install torch-directml")
 
-    # 4. Fallback: CPU
+    # 4. Check for Apple MPS (Metal Performance Shaders)
+    if torch.backends.mps.is_available():
+        device = torch.device("mps")
+        logging.info("Detected Apple GPU (MPS)")
+        return device
+
+    # 5. Fallback: CPU
     logging.warning("No available GPU detected. Falling back to CPU.")
     return torch.device("cpu")
 
