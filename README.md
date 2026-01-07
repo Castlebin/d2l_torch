@@ -79,7 +79,6 @@ print(f'datasets dir: {datasets_dir}')
 from dl_d2l.util import colab_util
 
 colab_util.flush_drive()
-print("Google Drive flushed.")
 ```
 
 
