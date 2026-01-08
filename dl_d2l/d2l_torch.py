@@ -2728,6 +2728,10 @@ argmax = lambda x, *args, **kwargs: x.argmax(*args, **kwargs)
 astype = lambda x, *args, **kwargs: x.type(*args, **kwargs)
 transpose = lambda x, *args, **kwargs: x.t(*args, **kwargs)
 
+
+
+
+
 ###################      Added     ##########################################
 def load_data_fashion_mnist_2(batch_size, resize=None, root_dir="../data"):
     """Download the Fashion-MNIST dataset and then load it into memory.
@@ -2745,90 +2749,3 @@ def load_data_fashion_mnist_2(batch_size, resize=None, root_dir="../data"):
                             num_workers=get_dataloader_workers()),
             data.DataLoader(mnist_test, batch_size, shuffle=False,
                             num_workers=get_dataloader_workers()))
-
-
-
-
-
-# 对于任意数据迭代器data_iter可访问的数据集,可以评估在任意模型net的精度.
-def evaluate_accuracy(net, data_iter):  # @save
-    """计算在指定数据集上模型的精度"""
-    if isinstance(net, torch.nn.Module):
-        net.eval()  # 将模型设置为评估模式
-    metric = Accumulator(2)  # 正确预测数,预测总数
-    with torch.no_grad():
-        for X, Y in data_iter:
-            metric.add(accuracy(net(X), Y), Y.numel())
-    return metric[0] / metric[1]
-
-
-
-
-# 训练
-def train_epoch_ch3(net, train_iter, loss, updater):  # @save
-    """训练模型一个迭代周期"""
-    # 将模型设置为训练模式
-    if isinstance(net, torch.nn.Module):
-        net.train()
-    # 训练损失总和,训练准确度总和,样本数
-    metric = Accumulator(3)
-    for X, Y in train_iter:
-        # 计算梯度并更新参数
-        y_hat = net(X)
-        l = loss(y_hat, Y)
-        if isinstance(updater, torch.optim.Optimizer):
-            # 使用PyTorch内置的优化器和损失函数
-            # Method 1
-            updater.zero_grad()
-            l.mean().backward()
-            updater.step()
-
-            # Method 2
-            # updater.zero_grad()
-            # l.backward()
-            # metric.add(float(l) * len(Y), accuracy(y_hat, Y),
-            #            Y.size().numel())
-        else:
-            # 使用定制的优化器和损失函数
-            l.sum().backward()
-            updater(X.shape[0])
-
-            # Method 2
-            # metric.add(float(l.sum()),accuracy(y_hat,Y),Y.numel())
-        # Method 1
-        metric.add(float(l.sum()), accuracy(y_hat, Y), Y.numel())
-    return metric[0] / metric[2], metric[1] / metric[2]
-
-
-
-# 实现一个训练函数,它会在train_iter访问到的训练数据集上训练一个模型net.
-# 该训练函数将会运行多个迭代周期(由num_epochs指定).
-# 在每个迭代周期结束时,利用test_iter访问到的测试数据集对模型进行评估.
-# 将利用Animator类来可视化训练进度.
-def train_ch3(net, train_iter, test_iter, loss, num_epochs, updater):  # @save
-    """训练模型"""
-    animator = Animator(xlabel='epoch', xlim=[1, num_epochs], ylim=[0.3, 0.9],
-                        legend=['train loss', 'train acc', 'test acc'])
-    for epoch in range(num_epochs):
-        train_metrics = train_epoch_ch3(net, train_iter, loss, updater)
-        test_acc = evaluate_accuracy(net, test_iter)
-        animator.add(epoch + 1, train_metrics + (test_acc,))
-    train_loss, train_acc = train_metrics
-    print(f'train_loss is {train_loss:.2f}. train_acc is {train_acc:.2f}. test_acc is {test_acc:.2f}.')
-    assert train_loss < 0.5, train_loss
-    assert train_acc <= 1 and train_acc > 0.7, train_acc
-    assert test_acc <= 1 and test_acc > 0.7, test_acc
-
-
-# 作为一个从零开始的实现,使用文档中定义的小批量随机梯度下降来优化模型的损失函数,设置学习率为0.1.
-#lr = 0.1
-
-
-#def updater(batch_size):
-#    return sgd([W, b], lr, batch_size)
-
-
-# 训练模型10个迭代周期.请注意,迭代周期(num_epochs)和学习率(lr)都是可调节的超参数.
-# 通过更改它们的值,可以提高模型的分类精度.
-#num_epochs = 10
-#train_ch3(net, train_iter, test_iter, cross_entropy, num_epochs, updater)
